@@ -1,0 +1,61 @@
+{
+  "main_pages": 9,
+  "total_pdf_pages": 17,
+  "main_and_caption_seed_mentions": 0,
+  "main_oracle_mentions": 0,
+  "randomization_details": "Consolidated in Appendix Randomness and uncertainty; original numeric identifiers retained",
+  "duplicate_labels": 0,
+  "undefined_internal_refs": 0,
+  "undefined_citations": 0,
+  "latex_warnings": [],
+  "underfull_vbox_notices": [
+    "Underfull \\vbox (badness 10000) has occurred while \\output is active []",
+    "Underfull \\vbox (badness 2302) has occurred while \\output is active []"
+  ],
+  "numerical_and_settings_tables_preserved": {
+    "tab:history-summary": "All table cells unchanged (initialization heading normalized)",
+    "tab:concentration": "All table cells unchanged (initialization heading normalized)",
+    "tab:protocols": "Protocol wording updated; randomization moved to Appendix B.2",
+    "tab:training-settings": "All table cells unchanged (initialization heading normalized)",
+    "tab:bank-headroom": "All table cells unchanged (initialization heading normalized)",
+    "tab:full-downstream": "All table cells unchanged (initialization heading normalized)",
+    "tab:history-full": "All table cells unchanged (initialization heading normalized)",
+    "tab:history-accuracy": "All table cells unchanged (initialization heading normalized)",
+    "tab:cross-seed-mechanism": "All table cells unchanged (initialization heading normalized)"
+  },
+  "data_rows_checked": {
+    "history": 16,
+    "downstream": 12,
+    "matched_bins": 3
+  },
+  "downstream_sign_counts": {
+    "positive": 4,
+    "zero": 1,
+    "negative": 7
+  },
+  "uncertainty_intervals_reestimated": false,
+  "experiments_rerun": false,
+  "active_pdf_assets_unchanged": true,
+  "figure2_png_svg": "Re-rendered from the active PDF to replace stale companions; actual compiled Figure 2 unchanged",
+  "sha256_unchanged": {
+    "references.bib": "bf102f23b32ea8378b3ad0fb055504918247b848b6daed0f6c6c7ec6862c8979",
+    "iclr2027_conference.sty": "797deef41724e93761426ac0cbcca46279a91cc650dd1f0ce76a4f08d2098ea6",
+    "iclr2027_conference.bst": "2d67552db7ed38ccfccb5957b52f95656e25c249724761d3cf5f7922ad1844c5",
+    "natbib.sty": "d2709be806dc7d5f54daa9a16022ba1451b1322954751b98e38cfad0cc107450",
+    "fancyhdr.sty": "9130c52f91087abc6d223164ffa587e207e3257fcbcd069ef09ecb5391043f14",
+    "data/README.md": "b1edbbc130fe04fa5cc3aacc571db58bcfe476a8326383726311b4410efcafc0",
+    "data/coding_illustration.json": "ffc338e6426f397eb24f428fd40a23b0728bf4c5d7a60c0077222ab0d62a2dc7",
+    "data/concentration.json": "9d827a04ab5eb67d2edba1579e84250be3ee0e40e2347be8fbefe619c70e55d0",
+    "data/downstream.csv": "5d8c679d147b1ffd76743f298f55f402d364bb12211aac4efd35f6337bc84f12",
+    "data/headroom.json": "594f085ccb154c15e0e67ee42cc355bafb64ce815c23ed2c3373692b0e67cf68",
+    "data/history.csv": "1cad61d1f7e30b8912bc3ed5a84e021e155d5181f7261eb550e7ca442ff005cb",
+    "figures/intro.pdf": "838aab8699d3a5d20a0fc82ecd4b08687160048b52ca54fa174338fe917cff8c",
+    "figures/flow.pdf": "c734f6285308eb2f9936036e0aa785f4649da3726a7b718736f80f4bce3f7960",
+    "figures/exp1.pdf": "2bd2599f34908536e3803804ab8bab1e3fa04335a1b7f2e582b4c3363e670da5",
+    "figures/liter.pdf": "c70d1bdb70cca97b8704fdf572d684f05426c92ee1f5f917aa785608099e23f2",
+    "figures/performance_summary.pdf": "6ec3c8da6a2606ece1d575ffb26d91bb64cc29dc045358d2177a76681199ebdd",
+    "figures/intro.png": "1cf21747e1672616f4c4dbf509827548a099696b2226d35a1121a3f5247d3b9d",
+    "figures/performance_summary.png": "cdcf82fbf248bf45319ca3b72aa25e5df276f3835f7075e20dd267d1eca5a040"
+  },
+  "review_scope": "Source-based editorial and arithmetic review; no independent reproduction or external literature audit"
+}

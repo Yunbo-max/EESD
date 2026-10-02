@@ -1,0 +1,11 @@
+{
+  "tab:history-summary": "All table cells unchanged (initialization heading normalized)",
+  "tab:concentration": "All table cells unchanged (initialization heading normalized)",
+  "tab:protocols": "Protocol wording updated; randomization moved to Appendix B.2",
+  "tab:training-settings": "All table cells unchanged (initialization heading normalized)",
+  "tab:bank-headroom": "All table cells unchanged (initialization heading normalized)",
+  "tab:full-downstream": "All table cells unchanged (initialization heading normalized)",
+  "tab:history-full": "All table cells unchanged (initialization heading normalized)",
+  "tab:history-accuracy": "All table cells unchanged (initialization heading normalized)",
+  "tab:cross-seed-mechanism": "All table cells unchanged (initialization heading normalized)"
+}

@@ -1,0 +1,13 @@
+benchmark,backbone,no_update_solved,eesd_solved,N,delta_pp,ci_low_pp,ci_high_pp,seed
+RunBugRun,Qwen,228,240,500,2.4,-2,6.8,1701
+RunBugRun,DeepSeek,184,198,500,2.8,-1.8,7.4,1701
+RunBugRun,Gemma,142,132,500,-2.0,-5.6,1.4,1701
+CodeARC,Qwen,85,83,500,-0.4,-2.8,2,1701
+CodeARC,DeepSeek,75,102,500,5.4,2.8,8,1701
+CodeARC,Gemma,59,56,500,-0.6,-2.6,1.4,1701
+APPS Replay,Qwen,57,57,500,0.0,-1.8,1.8,1701
+APPS Replay,DeepSeek,23,17,500,-1.2,-3.2,0.8,1701
+APPS Replay,Gemma,36,2,500,-6.8,-9,-4.8,1701
+CodeContests Replay,Qwen,47,39,500,-1.6,-3.2,0,1701
+CodeContests Replay,DeepSeek,18,24,500,1.2,-0.2,2.8,1701
+CodeContests Replay,Gemma,31,4,500,-5.4,-7.6,-3.2,1701

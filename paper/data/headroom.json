@@ -1,0 +1,14 @@
+[
+  {
+    "benchmark": "CodeARC",
+    "visible": 27.0,
+    "oracle": 31.2,
+    "gap_pp": 4.2
+  },
+  {
+    "benchmark": "RunBugRun",
+    "visible": 71.4,
+    "oracle": 75.4,
+    "gap_pp": 4.0
+  }
+]

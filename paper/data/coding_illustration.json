@@ -1,0 +1,73 @@
+{
+  "kind": "Analytical illustration, not a recorded model trajectory",
+  "alpha": 0.1,
+  "lambda_": 0.5,
+  "public_executions": [
+    {
+      "input": 1,
+      "expected": 1,
+      "before": 0,
+      "after": 1,
+      "transition": "Fix"
+    },
+    {
+      "input": 2,
+      "expected": 3,
+      "before": 1,
+      "after": 3,
+      "transition": "Fix"
+    },
+    {
+      "input": 3,
+      "expected": 6,
+      "before": 3,
+      "after": 6,
+      "transition": "Fix"
+    },
+    {
+      "input": 4,
+      "expected": 10,
+      "before": 6,
+      "after": 10,
+      "transition": "Fix"
+    }
+  ],
+  "records": [
+    {
+      "p": [
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ],
+      "r": [
+        1,
+        0,
+        0,
+        0
+      ],
+      "effective_mass": 4.0,
+      "utility_mean": 0.9090909090909092,
+      "utility_sd": 0.15401970385835254,
+      "weight": 0.8320810571617329
+    },
+    {
+      "p": [
+        0.97,
+        0.01,
+        0.01,
+        0.01
+      ],
+      "r": [
+        1,
+        0,
+        0,
+        0
+      ],
+      "effective_mass": 1.062473438164046,
+      "utility_mean": 0.726490759037545,
+      "utility_sd": 0.36909007333585925,
+      "weight": 0.5419457223696154
+    }
+  ]
+}

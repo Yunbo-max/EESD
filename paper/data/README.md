@@ -1,0 +1,1 @@
+These are transcriptions of the aggregate results in the uploaded main.tex, not raw logs or newly run experiments. Delta NLL uses Decimal subtraction of the reported four-decimal values. Paired intervals are retained, not re-estimated. No run manifests, training/evaluation source IDs, or per-source predictions were supplied.

@@ -1,0 +1,38 @@
+{
+  "source": "Previous submitted Overleaf main.tex and unchanged data files",
+  "primary_random_seed": 1701,
+  "additional_mechanism_random_seeds": [
+    1702,
+    1703
+  ],
+  "downstream_fitting_runs_per_cell": 1,
+  "paired_source_bootstrap_draws": 10000,
+  "confidence_intervals": "Recorded nominal paired per-cell 95% source-bootstrap intervals; not across fitting runs",
+  "mechanism_results": [
+    {
+      "seed": 1701,
+      "delta_nll": 0.00609,
+      "ci": [
+        0.00211,
+        0.01075
+      ]
+    },
+    {
+      "seed": 1702,
+      "delta_nll": -0.00367,
+      "ci": [
+        -0.00447,
+        -0.00287
+      ]
+    },
+    {
+      "seed": 1703,
+      "delta_nll": 0.00067,
+      "ci": [
+        0.00023,
+        0.00118
+      ]
+    }
+  ],
+  "experiments_rerun": false
+}

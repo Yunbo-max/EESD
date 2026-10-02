@@ -1,0 +1,37 @@
+\documentclass[border=3pt]{standalone}
+\usepackage{booktabs,array,tabularx,amssymb,tikz}
+\usepackage[table]{xcolor}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\definecolor{yesc}{HTML}{27836C}
+\definecolor{yesbg}{HTML}{EAF5F0}
+\definecolor{noc}{HTML}{8B9299}
+\definecolor{nobg}{HTML}{F5F6F7}
+\definecolor{varc}{HTML}{A67938}
+\definecolor{varbg}{HTML}{FAF2E6}
+\definecolor{ours}{HTML}{386898}
+\newcommand{\Y}{\tikz[baseline=-.6ex]\node[circle,fill=yesbg,text=yesc,inner sep=2.5pt,font=\fontsize{10}{10}\selectfont]{$\checkmark$};}
+\newcommand{\N}{\tikz[baseline=-.6ex]\node[circle,fill=nobg,text=noc,inner sep=2.5pt,font=\fontsize{10}{10}\selectfont]{$-$};}
+\newcommand{\V}{\tikz[baseline=-.6ex]\node[circle,fill=varbg,text=varc,inner sep=2.5pt,font=\fontsize{10}{10}\selectfont]{$\circ$};}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\begin{document}
+\begin{minipage}{17.4cm}
+\sffamily\fontsize{9}{10}\selectfont
+\setlength{\tabcolsep}{3pt}\renewcommand{\arraystretch}{1.38}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{3.65cm}*{7}{C}}
+\toprule
+Method & \shortstack{Inference\\revision /\\selection} & \shortstack{Generator\\update} & \shortstack{Execution\\feedback} & \shortstack{Adaptive\\training} & \shortstack{Transition\\support\\$r$} & \shortstack{Effective\\mass\\$E(p)$} & \shortstack{Support /\\mass\\separation} \\
+\midrule
+Self-Refine &\Y&\N&\N&\N&\N&\N&\N\\
+Reflexion (coding)&\Y&\N&\Y&\N&\N&\N&\N\\
+Self-Debugging&\Y&\N&\Y&\N&\N&\N&\N\\
+Execution-guided\newline verification / reranking&\Y&\N&\Y&\N&\N&\N&\N\\
+Importance-weighted\newline self-training&\N&\Y&\N&\Y&\N&\N&\N\\
+Confidence-aware\newline self-training&\N&\Y&\N&\Y&\N&\N&\N\\
+Reward / process-\newline weighted learning&\V&\V&\Y&\V&\N&\N&\N\\
+\midrule
+\rowcolor{blue!3}\textcolor{ours}{\textbf{EESD (ours)}}&\N&\Y&\Y&\Y&\Y&\Y&\Y\\
+\bottomrule
+\end{tabularx}
+\end{minipage}
+\end{document}

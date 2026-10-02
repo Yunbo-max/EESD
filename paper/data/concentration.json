@@ -1,0 +1,20 @@
+[
+  {
+    "bin": "[1,2)",
+    "count": 568,
+    "mean_mass": 1.511,
+    "delta_nll": 0.0159
+  },
+  {
+    "bin": "[2,3)",
+    "count": 815,
+    "mean_mass": 2.521,
+    "delta_nll": 0.0077
+  },
+  {
+    "bin": "[3,4]",
+    "count": 1617,
+    "mean_mass": 3.681,
+    "delta_nll": 0.0018
+  }
+]

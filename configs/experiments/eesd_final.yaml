@@ -1,0 +1,83 @@
+schema: eesd-final-experiment-v1
+claim: evidence_aware_self_distillation_for_coding_agents
+method_status: prospective_shapley
+protocol:
+  seeds: [1701, 1702, 1703]
+  bootstrap_seed: 314159
+  bootstrap_draws: 10000
+models:
+  qwen25_7b:
+    model_id: Qwen/Qwen2.5-Coder-7B-Instruct
+    revision: c03e6d358207e414f1eca0bb1891e29f1db0e242
+    dtype: bfloat16
+    quantization: nf4
+    lora_rank: 16
+  deepseek_6p7b:
+    model_id: deepseek-ai/deepseek-coder-6.7b-instruct
+    revision: e5d64addd26a6a1db0f9b863abf6ee3141936807
+    dtype: bfloat16
+    quantization: nf4
+    lora_rank: 16
+  gemma3_4b:
+    model_id: google/gemma-3-4b-it
+    revision: 093f9f388b31de276ce2de164bdc2081324b9767
+    dtype: bfloat16
+    quantization: nf4
+    lora_rank: 16
+benchmarks:
+  runbugrun:
+    source: giganticode/run_bug_run
+    revision: 374251a9d65410f37e1136049cb7ff5dcca3d0ae
+    role: executable_repair
+    official_metric: all_tests_pass_at_1
+  codearc:
+    source: Anjiang-Wei/CodeARC
+    revision: 0e26d76e602a07a21b114fadd325f92c9da875e9
+    role: interactive_inductive_program_synthesis
+    official_metric: all_hidden_tests_pass_at_1
+  evalplus:
+    source: evalplus/evalplus
+    revision: 26d6d00bb1fd0fa37f39c99d5290da67891d1c5e
+    role: external_transfer
+    official_metric: pass_at_1
+  livecodebench_v6:
+    source: LiveCodeBench/LiveCodeBench
+    revision: 3b0952feddeffad0063f274080e3c23d75e7eb39
+    role: temporal_external_transfer
+    official_metric: pass_at_1
+gate_cells:
+  - {role: positive_preservation, model: deepseek_6p7b, dataset: codearc}
+  - {role: moderate_signal, model: qwen25_7b, dataset: runbugrun}
+  - {role: harm_prevention, model: gemma3_4b, dataset: runbugrun}
+method:
+  public_executions: 4
+  relevance: exact_shapley_edit_token_logprob_contrast
+  coalitions: 16
+  zero_attribution_fallback: uniform_relevance
+  effective_mass: renyi2_inverse_concentration
+  prior: symmetric_jeffreys_dirichlet
+  alpha: 0.5
+  states: [improved, unchanged, regressed]
+  update_weight: positive_posterior_mean_advantage
+  forward_kl_beta: 0.03
+mechanism:
+  comparators: [lexical_eed, shapley_fixed_mass, shapley_eed]
+  metrics: [hidden_nll, hidden_brier, ece, spearman_hidden_net_gain, game_span, attribution_l1, effective_mass]
+  concentration_bins: [1, 2, 3, 4]
+downstream:
+  primary_sources_per_cell: 500
+  matched_response_token_budget: true
+  response_token_budget: 524288
+  training_arms: [no_update, equal_weight, final_correctness, scalar_confidence, fixed_mass_dirichlet, lexical_eed, shapley_eed_no_kl, eesd_full]
+  primary_metric: all_tests_pass_at_1
+  secondary_metrics: [fix_rate, regression_rate, net_gain, retained_correct_rate, policy_kl]
+expansion:
+  cells:
+    - {model: qwen25_7b, dataset: evalplus}
+    - {model: deepseek_6p7b, dataset: evalplus}
+    - {model: gemma3_4b, dataset: evalplus}
+    - {model: qwen25_7b, dataset: livecodebench_v6}
+    - {model: deepseek_6p7b, dataset: livecodebench_v6}
+    - {model: gemma3_4b, dataset: livecodebench_v6}
+  prerequisite: downstream_gate_pass
+  report_as: external_transfer_not_training_domain
