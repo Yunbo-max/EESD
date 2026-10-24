@@ -54,3 +54,23 @@ def test_invalid_kernel_rejected():
     b, y, _, _ = _sample()
     with pytest.raises(ValueError, match="symmetric PSD"):
         gate_update(b, y, [[1., 2., 0.], [2., 1., 0.], [0., 0., 1.]])
+
+
+def test_gate_is_invariant_to_positive_global_score_rescaling():
+    b, y, k, _ = _sample()
+    baseline = gate_update(b, y, k)
+    for scale in [1e-12, 1e-6, 1e6]:
+        other = gate_update(b, y, k * scale * scale)
+        assert other['accepted'] == baseline['accepted']
+        assert other['reason'] == baseline['reason']
+        np.testing.assert_allclose(other['rollout_weights'], baseline['rollout_weights'], atol=1e-8)
+        np.testing.assert_allclose(other['lofo_cosines'], baseline['lofo_cosines'], atol=1e-8)
+
+
+def test_invalid_nonfinite_thresholds_rejected():
+    b, y, k, _ = _sample()
+    for key, value in [('std_floor', float('nan')), ('std_floor', float('inf')),
+                       ('dual_tolerance', float('nan')), ('dual_tolerance', -1.),
+                       ('norm_floor', float('nan')), ('min_families', 2.3)]:
+        with pytest.raises(ValueError, match='invalid gate thresholds'):
+            gate_update(b, y, k, **{key: value})
