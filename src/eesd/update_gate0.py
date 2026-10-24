@@ -4,6 +4,7 @@ Only CPU mathematics. This is NOT evidence of hidden-test or model improvement.
 """
 from __future__ import annotations
 
+import math
 import numpy as np
 
 
@@ -58,9 +59,16 @@ def gate_update(before, after, score_kernel, *, std_floor=0.2, min_families=2,
     G, T = y.shape
     if not T or k.shape != (G, G) or not np.isfinite(k).all():
         raise ValueError("score_kernel must be finite G x G")
-    if not np.allclose(k, k.T, atol=1e-7, rtol=0) or np.linalg.eigvalsh((k+k.T)/2)[0] < -1e-7:
+    max_abs = float(np.max(np.abs(k)))
+    if not np.allclose(k, k.T, rtol=1e-8, atol=max_abs * 1e-12):
         raise ValueError("score_kernel must be symmetric PSD")
-    if std_floor <= 0 or min_families < 2 or norm_floor <= 0:
+    eigs = np.linalg.eigvalsh((k+k.T)/2)
+    if eigs[0] < -1e-7 * max(float(eigs[-1]), 1e-300):
+        raise ValueError("score_kernel must be symmetric PSD")
+    if (not isinstance(min_families, (int, np.integer)) or isinstance(min_families, bool)
+            or min_families < 2 or not all(math.isfinite(float(x)) and float(x) > 0
+                for x in (std_floor, norm_floor))
+            or not math.isfinite(float(dual_tolerance)) or dual_tolerance < 0):
         raise ValueError("invalid gate thresholds")
     families_by_signature = {}
     for j in range(T):
@@ -70,20 +78,24 @@ def gate_update(before, after, score_kernel, *, std_floor=0.2, min_families=2,
     rewards = np.column_stack([(y[:, js]-b[list(js)]).mean(axis=1) for js in families])
     centered = rewards - rewards.mean(axis=0, keepdims=True)
     advantages = centered / np.maximum(centered.std(axis=0, keepdims=True), std_floor)
-    h = (advantages.T @ k @ advantages) / (G * G)
+    # Compare directions, not arbitrary gradient units. A global rescaling of
+    # all score gradients must not change admission or rollout coefficients.
+    scale2 = float(np.trace(k)) / G
+    kernel_unit = k / scale2 if scale2 > 0 else np.zeros_like(k, dtype=float)
+    h = (advantages.T @ kernel_unit @ advantages) / (G * G)
     h = (h + h.T) / 2
     active = np.flatnonzero(np.sqrt(np.maximum(np.diag(h), 0)) > norm_floor)
     mixture = np.zeros(len(families))
     rollout_weights = np.zeros(G)
     lofo = [None] * len(families)
     gains = np.zeros(len(families))
-    norm, gap = 0.0, 0.0
+    normalized_norm, normalized_gap = 0.0, 0.0
     reason = "insufficient_behavior_families"
     if len(active) >= min_families:
         sub = h[np.ix_(active, active)]
-        alpha, gap = _minnorm_weights(sub)
+        alpha, normalized_gap = _minnorm_weights(sub)
         mixture[active] = alpha
-        norm = float(np.sqrt(max(0.0, alpha @ sub @ alpha)))
+        normalized_norm = float(np.sqrt(max(0.0, alpha @ sub @ alpha)))
         gains[active] = sub @ alpha
         for i, original_index in enumerate(active):
             remaining = np.array([j for j in range(len(active)) if j != i])
@@ -91,9 +103,9 @@ def gate_update(before, after, score_kernel, *, std_floor=0.2, min_families=2,
             w, _ = _minnorm_weights(smaller)
             denominator = float(np.sqrt(max(0.0, sub[i, i] * (w @ smaller @ w))))
             lofo[original_index] = float(sub[i, remaining] @ w / denominator) if denominator > norm_floor else 0.0
-        if gap > dual_tolerance:
+        if normalized_gap > dual_tolerance:
             reason = "solver_gap"
-        elif norm <= norm_floor:
+        elif normalized_norm <= norm_floor:
             reason = "no_common_ascent"
         elif any(lofo[j] <= 0 for j in active):
             reason = "cross_family_conflict"
@@ -105,5 +117,9 @@ def gate_update(before, after, score_kernel, *, std_floor=0.2, min_families=2,
         "reason": reason, "families": [list(f) for f in families],
         "active_families": active.tolist(), "family_mixture": mixture.tolist(),
         "rollout_weights": rollout_weights.tolist(), "lofo_cosines": lofo,
-        "first_order_gains": gains.tolist(), "direction_norm": norm, "dual_gap": gap,
+        "first_order_gains": (gains*scale2).tolist(),
+        "direction_norm": normalized_norm*math.sqrt(max(0.0,scale2)),
+        "dual_gap": normalized_gap*scale2,
+        "normalized_direction_norm": normalized_norm,
+        "normalized_dual_gap": normalized_gap,
     }
