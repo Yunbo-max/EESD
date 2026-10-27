@@ -1,0 +1,12 @@
+schema: eesd-iclr2027-v1
+seeds: [1701, 1702, 1703]
+evidence:
+  relevance_method: exact_evidence_shapley_edit_logprob_contrast
+  effective_mass: renyi2_effective_support
+  main_alpha: 0.5
+  prior: symmetric_jeffreys_dirichlet
+distillation:
+  trust_rule: posterior_positive_mean_advantage
+  benefit_states: [improved, unchanged, regressed]
+  hand_authored_transition_utility: false
+  uncertainty_penalty: none

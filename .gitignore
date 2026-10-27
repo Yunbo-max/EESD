@@ -10,4 +10,7 @@ checkpoints/
 models/
 datasets/
 .superpowers/
+data_raw/
+wheels/
+*.safetensors
 

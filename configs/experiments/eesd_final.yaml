@@ -26,13 +26,13 @@ models:
     lora_rank: 16
 benchmarks:
   runbugrun:
-    source: giganticode/run_bug_run
-    revision: 374251a9d65410f37e1136049cb7ff5dcca3d0ae
+    source: iberu/RunBugRun
+    revision: 837e7006c28153022469fb035a38f4652e3032b6
     role: executable_repair
     official_metric: all_tests_pass_at_1
   codearc:
-    source: Anjiang-Wei/CodeARC
-    revision: 0e26d76e602a07a21b114fadd325f92c9da875e9
+    source: anjiangwei/CodeARC-Problems
+    revision: d2ee0ad485724668eabb893a965c681a9ce78031
     role: interactive_inductive_program_synthesis
     official_metric: all_hidden_tests_pass_at_1
   evalplus:
