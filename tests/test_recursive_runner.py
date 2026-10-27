@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import numpy as np
 import pytest
-import torch
+torch=pytest.importorskip("torch")
 
 FILE=Path(__file__).resolve().parents[1]/'scripts'/'run_recursive_shapley_sdpo.py'
 spec=importlib.util.spec_from_file_location('run_recursive_shapley_sdpo',FILE)
