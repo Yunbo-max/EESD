@@ -96,3 +96,18 @@ def test_weak_token_credit_reduces_gradient_not_renormalized():
     loss2.backward()
     grad2=sum(float(p.grad.norm()) for p in student.parameters() if p.grad is not None)
     assert grad2/grad1==pytest.approx(100,rel=.001)
+
+
+def test_training_calibration_and_reserved_audit_are_disjoint(monkeypatch,tmp_path):
+    train=[{'source_id':'s1','problem_id':'p1','task':'t','buggy_code':'print(0)',
+            'public_tests':[{'id':str(j)} for j in range(4)]}]
+    cal=[{'source_id':'s1','problem_id':'p1','calibration_tests':[{'id':str(j)} for j in range(4,8)]}]
+    held=[{'source_id':'s1','problem_id':'p1','audit_tests':[{'id':str(j)} for j in range(8,12)]}]
+    manifest={'behavioral_schema':'eesd-runbugrun-behavioral-v1','calibration_tests':4,'audit_tests':4}
+    monkeypatch.setattr(m.legacy,'read_dataset',lambda *a:(train,[{'source_id':'e1'}],manifest),raising=False)
+    monkeypatch.setattr(m.legacy,'read_records',lambda path,keys:cal if path.name=='train_calibration.jsonl' else held,raising=False)
+    _,_,by_id,_=m.load_matched_data(tmp_path,1,1)
+    assert by_id['s1']['calibration_tests'][0]['id']=='4'
+    held[0]['audit_tests'][0]['id']='4'
+    with pytest.raises(ValueError,match='contamination'):
+        m.load_matched_data(tmp_path,1,1)
