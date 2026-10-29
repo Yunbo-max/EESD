@@ -163,6 +163,10 @@ def _train_source(teacher,student,optimizer,tokenizer,row,audit_tests,args,round
     # affect the loss/target. Audit-only and Shapley arms use it for gating.
     scores=[score_candidate(teacher,tokenizer,row,tok,fb,arm=args.arm,
                 max_prompt_tokens=args.max_prompt_tokens) for (tok,_),fb in zip(clean,feedback)]
+    # Store model-independent diagnostics LOCALLY for post-training audit.
+    # Reserved audit labels never influence these scores or the optimizer.
+    candidate_diagnostics={'candidate_sources':[code for _,code in clean],
+        'candidate_shift_means':[(v.mean(axis=1)-v[0].mean()).tolist() for v in scores]}
     if args.arm=='sdpo':
         mask=15; weights=[np.ones(len(tok),dtype=np.float32) for tok,_ in clean]
         selection={'reason':'all_feedback_unweighted','phi':None,'values':None}
@@ -182,7 +186,7 @@ def _train_source(teacher,student,optimizer,tokenizer,row,audit_tests,args,round
     if mask==0 or sum(float(w.sum()) for w in weights)<=1e-8:
         return {'source_id':row['source_id'],'step':False,'skip':selection['reason'],
                 'selected_mask':mask,'audit_variance':float(audit.var(axis=0).mean()),
-                'selection':selection}
+                'selection':selection,**candidate_diagnostics}
     optimizer.zero_grad(set_to_none=True)
     stats=[]
     applied=0
@@ -210,7 +214,8 @@ def _train_source(teacher,student,optimizer,tokenizer,row,audit_tests,args,round
             'mean_weight':float(np.mean([s['mean_weight'] for s in stats])),
             'grad_norm':float(norm.detach().cpu()),
             'program_code_sha256':[hashlib.sha256(code.encode()).hexdigest() for _,code in clean],
-            'candidate_audit_scores':audit.mean(axis=1).tolist()}
+            'candidate_audit_scores':audit.mean(axis=1).tolist(),
+            **candidate_diagnostics}
 
 
 def _save_json(path:Path,data:dict):
