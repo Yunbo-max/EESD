@@ -145,3 +145,19 @@ The runner creates immutable per-round evaluation, training and LoRA output fold
 Code files: src/eesd/behavioral_shapley.py, src/eesd/strict_execution.py, scripts/run_behavioral_shapley.py, scripts/prepare_behavioral_runbugrun.py, scripts/run_behavioral_matrix.sh, scripts/summarize_behavioral_shapley.py.
 
 **State of evidence as of this commit:** local unit tests pass; no new 7B/H100 outputs are reported, and the October 28 negative results remain the latest actual benchmark result.
+
+
+## 8. Independent post-training feedback audit (automated in matrix)
+
+The four reserved train-side audit tests are **not used** when selecting feedback or computing gradient weights. After all three recursive training rounds are finished, each Shapley training record contains locally stored canonical candidate programs and per-coalition mean log-probability shifts. The matrix invokes:
+
+    python scripts/audit_behavioral_shapley.py \
+      --data-dir runs/behavioral-data-1701 \
+      --experiment-dir runs/behavioral-full-1701/shapley_select \
+      --output runs/behavioral-full-1701/reserved_audit.json
+
+It **only evaluates** already generated programs in a proper sandbox; there are no GPU weight updates. It recomputes the behavioral alignment game using previously unseen reserved audit outcomes, comparing the selected subset with full feedback. Key fields are mean_selected_minus_full_on_heldout and fraction_accepted_with_positive_heldout_alignment. These audit values must never be used to adapt selection hyperparameters on the same run; if they are inspected during development, create an entirely new disjoint experiment manifest for final confirmation.
+
+The extra runner metadata (candidate_sources and candidate_shift_means) resides solely in gitignored local runs/ output, not in GitHub. It is sufficient to reconstruct the independent audit without loading the Qwen model again.
+
+The local pure-math/mocked runner test suite for this revision passes 19 tests; a live 7B+Bubblewrap end-to-end run has not yet been observed.
