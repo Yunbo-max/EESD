@@ -32,21 +32,28 @@ ARMS=('no_update','sdpo','audit_gate','shapley_select')
 
 def load_matched_data(data_dir:Path, train_limit:int, eval_limit:int):
     train, eval_rows, manifest=legacy.read_dataset(data_dir,train_limit,eval_limit)
-    audit=legacy.read_records(data_dir/'train_audit_do_not_train.jsonl',
-                              {'source_id','problem_id','audit_tests'})
-    by_id={r['source_id']:r for r in audit}
-    if len(by_id)!=len(audit) or len(by_id)<len(train):
+    if manifest.get('behavioral_schema')!='eesd-runbugrun-behavioral-v1':
+        raise ValueError('requires new 4+4+4 behavioral data split; old audit is not trainable')
+    calibration=legacy.read_records(data_dir/'train_calibration.jsonl',
+                                   {'source_id','problem_id','calibration_tests'})
+    reserved=legacy.read_records(data_dir/'train_audit_do_not_train.jsonl',
+                                 {'source_id','problem_id','audit_tests'})
+    by_id={r['source_id']:r for r in calibration}
+    reserved_by_id={r['source_id']:r for r in reserved}
+    if len(by_id)!=len(calibration) or len(by_id)<len(train):
         raise ValueError('missing/duplicate training audit records')
     for row in train:
         probe=by_id.get(row['source_id'])
-        if probe is None or probe['problem_id']!=row['problem_id']:
-            raise ValueError('training audit source identity mismatch')
-        if len(probe['audit_tests'])!=manifest['audit_tests']:
-            raise ValueError('training audit count mismatch')
+        heldout=reserved_by_id.get(row['source_id'])
+        if probe is None or heldout is None or probe['problem_id']!=row['problem_id'] or heldout['problem_id']!=row['problem_id']:
+            raise ValueError('calibration/held-out source identity mismatch')
+        if len(probe['calibration_tests'])!=4 or len(heldout['audit_tests'])!=4:
+            raise ValueError('expected 4 calibration and 4 held-out tests')
         pub={x['id'] for x in row['public_tests']}
-        aud={x['id'] for x in probe['audit_tests']}
-        if len(aud)!=len(probe['audit_tests']) or pub & aud:
-            raise ValueError('public/audit test contamination')
+        cal={x['id'] for x in probe['calibration_tests']}
+        aud={x['id'] for x in heldout['audit_tests']}
+        if len(cal)!=4 or len(aud)!=4 or pub & cal or pub & aud or cal & aud:
+            raise ValueError('feedback/calibration/audit test contamination')
     return train,eval_rows,by_id,manifest
 
 
@@ -243,12 +250,18 @@ def main():
         'arm':args.arm,'model':'Qwen/Qwen2.5-Coder-7B-Instruct',
         'revision':legacy.MODEL_REVISION,'train_sources':len(train),'eval_sources':len(ev),
         'dataset_manifest_sha256':legacy.digest(args.data_dir/'manifest.json'),
-        'audit_budget_per_rollout':len(next(iter(audit.values()))['audit_tests']),
+        'calibration_budget_per_rollout':len(next(iter(audit.values()))['calibration_tests']),
+        'reserved_train_audit_tests_per_source':4,
         'feedback_tests':4,'rollouts':args.rollouts,'rounds':args.rounds,
         'isolation':'bubblewrap_mandatory_no_soft_fallback',
         'gold_fixed_code_used':False,
-        'audit_probes_are_training_side_labels':True,
-        'official_sdpo_reproduction':False}
+        'calibration_probes_are_training_side_labels':True,
+        'reserved_train_audit_used_for_training':False,
+        'official_sdpo_reproduction':False,
+        'seed':args.seed,'temperature':args.temperature,
+        'max_new_tokens':args.max_new_tokens,'max_prompt_tokens':args.max_prompt_tokens,
+        'learning_rate':args.learning_rate,'beta':args.beta,
+        'init_adapter':str(args.init_adapter) if args.init_adapter else None}
     if args.dry_run:
         print(json.dumps(plan,indent=2));return
     if args.output.exists():raise FileExistsError('experimental result directory already exists')
@@ -282,7 +295,7 @@ def main():
         with (folder/'training.jsonl').open('x') as output:
             for row in train:
                 record=_train_source(teacher,student,optim,tokenizer,row,
-                                     audit[row['source_id']]['audit_tests'],args,rnd)
+                                     audit[row['source_id']]['calibration_tests'],args,rnd)
                 records.append(record)
                 output.write(json.dumps(record,sort_keys=True)+'\n');output.flush()
         updated=folder/'adapter';student.save_pretrained(updated)
