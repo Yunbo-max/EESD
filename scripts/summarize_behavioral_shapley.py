@@ -16,7 +16,7 @@ def summarize(root:Path, *, seed:int=314159, bootstraps:int=2000)->dict:
         plan=json.loads((root/arm/'plan.json').read_text())
         if plan['arm']!=arm or plan['isolation']!='bubblewrap_mandatory_no_soft_fallback':
             raise ValueError('unmatched arm or unsafe execution provenance')
-        proto={k:plan.get(k) for k in ('model','revision','train_sources','eval_sources','rollouts','feedback_tests','audit_budget_per_rollout','rounds','dataset_manifest_sha256','seed','temperature','max_new_tokens')}
+        proto={k:plan.get(k) for k in ('model','revision','train_sources','eval_sources','rollouts','feedback_tests','calibration_budget_per_rollout','rounds','dataset_manifest_sha256','seed','temperature','max_new_tokens')}
         if protocols is None: protocols=proto
         elif protocols!=proto:raise ValueError('protocol mismatch between arms')
         measures[arm]={}
