@@ -18,3 +18,6 @@ for arm in no_update sdpo audit_gate shapley_select; do
   --eval-limit "$EVAL" --rollouts "$G" --seed 1701 --rounds 3
 done
 python scripts/summarize_behavioral_shapley.py --root "$OUT" --output "$OUT/paired_results.json"
+
+python scripts/audit_behavioral_shapley.py --data-dir "$DATA" \
+ --experiment-dir "$OUT/shapley_select" --output "$OUT/reserved_audit.json"
