@@ -16,6 +16,14 @@ import sqlite3
 from prepare_recursive_runbugrun import _select
 
 
+def _sha_file(path:Path)->str:
+    h=hashlib.sha256()
+    with path.open('rb') as f:
+        for chunk in iter(lambda:f.read(1024*1024),b''):
+            h.update(chunk)
+    return h.hexdigest()
+
+
 def extract(db_file:Path, output:Path, *,train_sources:int=64,eval_sources:int=64,seed:int=1701)->dict:
     if train_sources<1 or eval_sources<1 or output.exists() or not db_file.is_file():
         raise ValueError('bad source counts or input/output paths')
@@ -50,7 +58,7 @@ def extract(db_file:Path, output:Path, *,train_sources:int=64,eval_sources:int=6
               'public_tests':4,'calibration_tests':4,'audit_tests':4,
               'seed':seed,'file_sha256':checksums,'never_read_fixed_code':True,
               'split':'train=0, test=2, Python language=5',
-              'db_sha256':hashlib.sha256(db_file.read_bytes()).hexdigest(),
+              'db_sha256':_sha_file(db_file),
               'split_policy':'problem_id disjoint; 4 feedback + 4 calibration + 4 reserved audit',
               'uses_gold_code':False}
     (output/'manifest.json').write_text(json.dumps(manifest,sort_keys=True,indent=2)+'\n')
