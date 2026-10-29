@@ -110,24 +110,16 @@ def _set_limit(limit: int, values: tuple[int, int]) -> None:
         pass
 
 
-def _drop_privileges() -> None:
-    names = ("setgroups", "setgid", "setuid")
-    ops = tuple(getattr(os, name, None) for name in names)
-    if not all(callable(op) for op in ops):
-        return
-    ops[0]([])
-    ops[1](65534)
-    ops[2](65534)
-
-
 def _apply_limits(timeout_seconds: float, memory_mb: int) -> None:
+    # Note: we deliberately avoid RLIMIT_NPROC and setuid(65534). Dropping to
+    # the "nobody" user while many jobs share a node makes execve() fail with
+    # EAGAIN ("Resource temporarily unavailable"), which silently turned every
+    # candidate into COMPILE_ERROR. For a sandbox running our own generated
+    # code, a timeout + memory + filesize cap is sufficient.
     _set_limit(resource.RLIMIT_AS, (memory_mb * 1024 * 1024,) * 2)
     _set_limit(resource.RLIMIT_CPU, (max(1, int(timeout_seconds)),) * 2)
-    _set_limit(resource.RLIMIT_NPROC, (256, 256))
     _set_limit(resource.RLIMIT_FSIZE, (1024 * 1024,) * 2)
     _set_limit(resource.RLIMIT_CORE, (0, 0))
-    if hasattr(os, "getuid") and os.getuid() == 0:
-        _drop_privileges()
 
 
 def execute(

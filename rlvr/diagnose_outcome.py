@@ -8,7 +8,7 @@ from pathlib import Path
 
 import yaml
 
-from data import load_sources, make_chat_messages
+from data import load_sources
 from execution import execute, _extract_code
 
 
@@ -57,13 +57,10 @@ def main() -> None:
 
     sources = load_sources(args.problems, args.invocations)
     source = next(s for s in sources if s["problem_id"] == args.pid)
-    raw_prompt = source["prompt"]
+    prompt = source["prompt"] + "\n"
     tests = source["public_tests"]
-    chat_prompt = tokenizer.apply_chat_template(
-        make_chat_messages(raw_prompt), add_generation_prompt=True, tokenize=False
-    )
     prompt_ids = tokenizer(
-        chat_prompt, add_special_tokens=True, return_tensors="pt"
+        prompt, add_special_tokens=True, return_tensors="pt"
     ).input_ids.to(model.device)
 
     torch.manual_seed(0)
@@ -78,29 +75,35 @@ def main() -> None:
             num_return_sequences=16,
             pad_token_id=tokenizer.pad_token_id,
             tokenizer=tokenizer,
-            stop_strings=["\n\n#", "\nif __name__", "\n```", "<|im_end|>"],
+            stop_strings=["\n\n#", "\nif __name__"],
         )
 
     from collections import Counter
 
     dist = Counter()
     samples = []
+    dump = []
     for seq in generated:
         text = tokenizer.decode(seq[prompt_ids.shape[1] :], skip_special_tokens=True)
-        cand = raw_prompt + "\n" + text
-        row = [execute(cand, t).outcome for t in tests]
+        cand = prompt + text
+        first = execute(cand, tests[0])
+        row = [first.outcome] + [execute(cand, t).outcome for t in tests[1:]]
         for o in row:
             dist[o] += 1
-        if len(samples) < 3:
-            samples.append((cand, row, _extract_code(cand)))
+        if len(samples) < 4:
+            samples.append((cand, row, _extract_code(cand), first.feedback))
+        dump.append({"candidate": cand, "outcomes": row, "feedback": first.feedback})
     print(json.dumps({"outcome_dist": dict(dist)}))
-    for i, (cand, row, ext) in enumerate(samples):
-        print(f"=== sample {i} outcomes={row} ===")
-        print("extracted:", repr(ext[:120]))
-        print("cand tail:", repr(cand[-120:]))
+    for i, (cand, row, ext, feedback) in enumerate(samples):
+        print(f"=== sample {i} outcomes={row} feedback={feedback!r} ===")
+        print("extracted:", repr(ext))
+        print("cand tail:", repr(cand[-200:]))
 
     args.output.mkdir(parents=True, exist_ok=True)
     (args.output / "outcome.jsonl").write_text(json.dumps({"dist": dict(dist)}) + "\n")
+    (args.output / "dump.jsonl").write_text(
+        "\n".join(json.dumps(d) for d in dump) + "\n"
+    )
 
 
 if __name__ == "__main__":

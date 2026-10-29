@@ -12,7 +12,7 @@ from pathlib import Path
 
 import yaml
 
-from data import load_sources, make_chat_messages
+from data import load_sources
 
 
 def main() -> None:
@@ -91,21 +91,13 @@ def main() -> None:
     for epoch in range(args.epochs):
         total_loss = 0.0
         for source in sources:
-            raw_prompt = source["prompt"]
             gold_body = "\n".join(source["gold"].split("\n")[1:])
-            messages = make_chat_messages(raw_prompt)
-            messages.append({"role": "assistant", "content": gold_body})
-            text = tokenizer.apply_chat_template(messages, tokenize=False)
-            prompt_text = tokenizer.apply_chat_template(
-                make_chat_messages(raw_prompt),
-                add_generation_prompt=True,
-                tokenize=False,
-            )
+            text = source["prompt"] + "\n" + gold_body + "\n"
             encoded = tokenizer(text, add_special_tokens=True, return_tensors="pt")
             input_ids = encoded.input_ids.to(model.device)
             attention_mask = encoded.attention_mask.to(model.device)
             prompt_len = len(
-                tokenizer(prompt_text, add_special_tokens=True)["input_ids"]
+                tokenizer(source["prompt"] + "\n", add_special_tokens=True)["input_ids"]
             )
             labels = input_ids.clone()
             labels[:, :prompt_len] = -100

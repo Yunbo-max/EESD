@@ -16,7 +16,7 @@ from pathlib import Path
 import numpy as np
 import yaml
 
-from data import load_sources, make_chat_messages
+from data import load_sources
 from execution import execute
 from reward import (
     evidence_calibrated_reward,
@@ -164,18 +164,13 @@ def main() -> None:
 
     for step in range(args.steps):
         for source in sources:
-            raw_prompt = source["prompt"]
-            chat_prompt = tokenizer.apply_chat_template(
-                make_chat_messages(raw_prompt),
-                add_generation_prompt=True,
-                tokenize=False,
-            )
+            prompt = source["prompt"] + "\n"
             prompt_ids = tokenizer(
-                chat_prompt, add_special_tokens=True, return_tensors="pt"
+                prompt, add_special_tokens=True, return_tensors="pt"
             ).input_ids.to(model.device)
 
             torch.manual_seed(args.seed + step * 1000 + source["problem_id"])
-            stop_strings = ["\n\n#", "\nif __name__", "\n```", "<|im_end|>"]
+            stop_strings = ["\n\n#", "\nif __name__"]
             with torch.no_grad():
                 generated = sample_model.generate(
                     prompt_ids,
@@ -195,7 +190,7 @@ def main() -> None:
                 tokenizer.decode(seq[prompt_ids.shape[1] :], skip_special_tokens=True)
                 for seq in full_sequences
             ]
-            candidates = [raw_prompt + "\n" + text for text in response_texts]
+            candidates = [prompt + text for text in response_texts]
 
             tasks = [
                 (candidate, test)
