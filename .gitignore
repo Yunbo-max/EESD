@@ -13,4 +13,7 @@ datasets/
 data_raw/
 wheels/
 *.safetensors
+runs/
+logs/qz/full-*.log
+logs/qz/recursive-pilot.log
 

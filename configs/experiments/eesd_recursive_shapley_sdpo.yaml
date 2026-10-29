@@ -25,7 +25,7 @@ protocol:
   train_source_g: 8
   recursive_updates: 3
   max_generation_tokens: 256
-  prompt_token_budget: 2048
+  prompt_token_budget: 4096
   temperature: 0.7
   top_p: 0.95
   optimizer: adamw
