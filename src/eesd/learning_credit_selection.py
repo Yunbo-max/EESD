@@ -154,7 +154,8 @@ def scoring_cost(feedback_tests: int, rollouts: int, sources: int,
         raise ValueError('positive budgets required')
     if feedback_tests>8:
         raise ValueError('exact coalition scoring above 8 tests requires approximation')
-    coalitions=2**feedback_tests if arm in ('shapley','direct_max','random_subset') else 2
+    coalitions=(0 if arm=='no_update' else
+                2**feedback_tests if arm in ('shapley','direct_max','random_subset') else 2)
     return {'feedback_tests':feedback_tests,'exact_coalitions':2**feedback_tests,
             'per_candidate_scoring_calls':coalitions,
             'total_scoring_calls':coalitions*rollouts*sources*rounds,
