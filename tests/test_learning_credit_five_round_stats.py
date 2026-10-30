@@ -36,6 +36,15 @@ def _tree(root):
                 d={'optimizer_steps':2,'scheduled_optimizer_steps':2,
                    'selected_masks':[1,1,0,0],'abstention_rate':.5}
                 (rd/'summary.json').write_text(json.dumps(d))
+                if arm in ('shapley','direct_max'):
+                    receipts=[{'source_id':name,'step':i==1,
+                       'selected_mask':1 if i==1 else 0,
+                       'j_calibration':.10 if i==1 and arm=='shapley'
+                           else .15 if i==1 else None,
+                       'candidate_code_sha256':['c1','c2']}
+                       for i,name in enumerate(names)]
+                    (rd/'training.jsonl').write_text(
+                        '\\n'.join(json.dumps(v) for v in receipts)+'\\n')
 
 
 def test_paired_final_and_realized_matching(tmp_path):
