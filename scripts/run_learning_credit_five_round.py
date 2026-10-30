@@ -481,6 +481,8 @@ def main():
             lr=args.learning_rate,
             weight_decay=0.0,
         )
+        torch.cuda.reset_peak_memory_stats()
+        train_start_time = time.perf_counter()
         records = []
         schedule_round = schedule["training_rounds"][rnd] if schedule else None
         train_order = list(train)
@@ -528,6 +530,8 @@ def main():
         if requested_steps is not None and actual_steps != requested_steps:
             raise RuntimeError(f"unable to achieve strictly matched actual updates: "
                                f"target={requested_steps}, realized={actual_steps}")
+        train_wallclock_s = time.perf_counter()-train_start_time
+        gpu_peak_bytes = int(torch.cuda.max_memory_allocated())
         updated = folder / "adapter"
         student.save_pretrained(updated)
         _save_json(
@@ -539,6 +543,16 @@ def main():
                 "abstention_rate": sum(not r.get("step", False) for r in records)
                 / len(records),
                 "selected_masks": [r.get("selected_mask", 0) for r in records],
+                "teacher_subset_scoring_calls": int(sum(
+                  len(r.get("candidate_sources", []))
+                  * (16 if args.arm in ("shapley","direct_max","random_subset")
+                     else 2) for r in records)),
+                "public_test_executions":int(sum(4*len(r.get("candidate_sources",[]))
+                                                for r in records)),
+                "calibration_test_executions":int(sum(4*len(r.get("candidate_sources",[]))
+                                                     for r in records)),
+                "training_wallclock_seconds":train_wallclock_s,
+                "peak_cuda_allocated_bytes":gpu_peak_bytes,
                 "choice_reasons":dict(Counter(r.get("choice_rule",r.get("skip","unknown")) for r in records)),
                 "scheduled_optimizer_steps":(
                     schedule["training_rounds"][rnd]["shapley_actual_optimizer_steps"]
