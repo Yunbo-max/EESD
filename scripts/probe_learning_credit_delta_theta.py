@@ -176,6 +176,10 @@ def main():
           'direct_max':selection_from_arm('direct_max',scores,calibration,
              round_index=a.round,source_id=row['source_id'],seed=a.seed),
         }
+        if choices['shapley'].mask != int(reference['selected_mask']):
+            raise RuntimeError(
+                "Shapley mask changed when replaying a fixed candidate/teacher "
+                "snapshot; refuse incomparable parameter interventions")
         choices['random_subset']=selection_from_arm(
              'random_subset',scores,calibration,round_index=a.round,
              source_id=row['source_id'],seed=a.seed,
