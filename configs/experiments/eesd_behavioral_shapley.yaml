@@ -30,7 +30,7 @@ training:
   teacher: frozen_round_policy
   candidate_normalization: stripped_executable_python_code
   max_new_tokens: 256
-  max_prompt_tokens: 4096
+  max_prompt_tokens: 8192
   optimizer: adamw
   learning_rate: 0.00001
   anchor_beta: 0.02
