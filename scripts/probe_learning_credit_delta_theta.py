@@ -139,7 +139,7 @@ def main():
         or plan.get('arm')!='shapley' or plan.get('seed')!=a.seed
         or plan.get('dataset_manifest_sha256')!=run.legacy.digest(a.data_dir/'manifest.json')):
         raise ValueError('wrong Shapley source experiment')
-    snapshot=(a.shapley_run/'round_'+str(a.round-1)/'adapter'
+    snapshot=(a.shapley_run / f'round_{a.round-1}' / 'adapter'
               if a.round>0 else Path(plan['init_adapter']))
     if run._digest_adapter(snapshot)!=plan['initial_adapter_sha256'] and a.round==0:
         raise ValueError('baseline adapter checksum mismatch')
