@@ -44,7 +44,7 @@ def _tree(root):
                        'candidate_code_sha256':['c1','c2']}
                        for i,name in enumerate(names)]
                     (rd/'training.jsonl').write_text(
-                        '\\n'.join(json.dumps(v) for v in receipts)+'\\n')
+                        '\n'.join(json.dumps(v) for v in receipts)+'\n')
 
 
 def test_paired_final_and_realized_matching(tmp_path):
