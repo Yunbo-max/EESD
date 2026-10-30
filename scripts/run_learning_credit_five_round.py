@@ -349,6 +349,8 @@ def _train_source(teacher, student, optimizer, tokenizer, row, calibration_tests
     norm=torch.nn.utils.clip_grad_norm_([p for p in student.parameters()
                                           if p.requires_grad],1.0)
     if not torch.isfinite(norm):raise RuntimeError("nonfinite gradient norm")
+    if float(norm.detach().cpu()) <= 1e-10:
+        return {**diagnostics,"step":False,"skip":"zero_parameter_gradient"}
     optimizer.step()
     return {**diagnostics,"step":True,"gradient_norm":float(norm.cpu()),
             "mean_weight":float(np.mean([v["mean_weight"] for v in stats])),
