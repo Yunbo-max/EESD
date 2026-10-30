@@ -467,23 +467,52 @@ def main():
             weight_decay=0.0,
         )
         records = []
+        schedule_round = schedule["training_rounds"][rnd] if schedule else None
+        train_order = list(train)
+        requested_steps = None
+        if args.arm == "matched_random_updates":
+            requested_steps = schedule_round["shapley_actual_optimizer_steps"]
+            preselected = set(schedule_round["random_update_sources"])
+            first = [r for r in train_order if r["source_id"] in preselected]
+            # Stable fallback ranking is chosen BEFORE seeing candidates,
+            # independent of evaluation/test performance.
+            backup = sorted((r for r in train_order if r["source_id"] not in preselected),
+                key=lambda r: hashlib.sha256(
+                    f'{args.seed}:{rnd}:{r["source_id"]}:backup'.encode()).hexdigest())
+            train_order = first + backup
+        actual_steps = 0
         with (folder / "training.jsonl").open("x") as output:
-            for row in train:
-                schedule_round = schedule["training_rounds"][rnd] if schedule else None
+            for row in train_order:
+                active_schedule = schedule_round
+                if args.arm == "matched_random_updates":
+                    if actual_steps >= requested_steps:
+                        record={"source_id":row["source_id"],"round":rnd,
+                                "step":False,"selected_mask":0,
+                                "skip":"exact_update_count_satisfied"}
+                        records.append(record)
+                        output.write(json.dumps(record,sort_keys=True)+"\n")
+                        output.flush()
+                        continue
+                    # The random source preference was preregistered in the
+                    # schedule. Fallback sources are predetermined and used
+                    # ONLY if a prior candidate could not produce a real step.
+                    active_schedule = dict(schedule_round,
+                        random_update_sources=[row["source_id"]])
                 record = _train_source(
-                    teacher,
-                    student,
-                    optim,
-                    tokenizer,
-                    row,
+                    teacher,student,optim,tokenizer,row,
                     audit[row["source_id"]]["calibration_tests"],
-                    args,
-                    rnd,
-                    schedule_round,
-                )
+                    args,rnd,active_schedule)
+                if args.arm == "matched_random_updates":
+                    record["preselected_random_source"] = (
+                         row["source_id"] in set(schedule_round["random_update_sources"]))
+                    record["fallback_random_source"] = not record["preselected_random_source"]
+                actual_steps+=int(record.get("step",False))
                 records.append(record)
                 output.write(json.dumps(record, sort_keys=True) + "\n")
                 output.flush()
+        if requested_steps is not None and actual_steps != requested_steps:
+            raise RuntimeError(f"unable to achieve strictly matched actual updates: "
+                               f"target={requested_steps}, realized={actual_steps}")
         updated = folder / "adapter"
         student.save_pretrained(updated)
         _save_json(
