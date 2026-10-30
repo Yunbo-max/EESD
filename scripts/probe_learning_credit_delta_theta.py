@@ -100,6 +100,9 @@ def _one_step(student,teacher,tokenizer,row,candidates,feedback,calibration,
         return {'updated':False,'gradient_norm':0.,'reason':'all_candidates_zero_weight'}
     norm=torch.nn.utils.clip_grad_norm_([p for p in student.parameters() if p.requires_grad],1.)
     if not torch.isfinite(norm):raise RuntimeError('nonfinite intervention gradient')
+    if float(norm.detach().cpu()) <= 1e-10:
+        return {'updated':False,'gradient_norm':float(norm.detach().cpu()),
+                'reason':'zero_parameter_gradient'}
     optim.step()
     return {'updated':True,'gradient_norm':float(norm.detach().cpu()),
             'updated_candidates':count,'reason':'one_real_lora_step'}
