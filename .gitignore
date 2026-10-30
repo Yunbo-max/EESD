@@ -17,3 +17,5 @@ runs/
 logs/qz/full-*.log
 logs/qz/recursive-pilot.log
 
+bin/
+logs/qz/behavioral-*.log

@@ -85,13 +85,16 @@ def _run_bwrap(
     executable: str, code: str, test: dict, *, timeout: int, memory_mb: int
 ) -> Outcome:
     # Expose only standard system Python/lib paths read-only; no workspace mount.
+    # NOTE: `--proc /proc` is omitted because the shared H100 container blocks
+    # procfs mounts ("Can't mount proc: Operation not permitted"). Dropping only
+    # the proc mount keeps full user/mount/pid/net/ipc/uts namespace isolation,
+    # so generated code still has no filesystem or network access to the
+    # workspace. `--dev /dev` remains (devtmpfs mounts fine) for stdin/stdout.
     cmd = [
         executable,
         "--die-with-parent",
         "--new-session",
         "--unshare-all",
-        "--proc",
-        "/proc",
         "--dev",
         "/dev",
         "--tmpfs",
