@@ -71,6 +71,19 @@ def _load_schedule(path: Path, args, manifest_sha: str, adapter_sha: str,
         raise ValueError("schedule protocol/source/seed/adapter mismatches")
     if len(receipt["training_rounds"])!=args.rounds:
         raise ValueError("schedule missing rounds")
+    population=set(source_ids)
+    for k,entry in enumerate(receipt["training_rounds"]):
+        masks=entry.get("accepted_masks")
+        random_ids=entry.get("random_update_sources")
+        target=entry.get("shapley_actual_optimizer_steps")
+        if (entry.get("round")!=k or not isinstance(masks,dict)
+            or set(masks)!=population
+            or any(type(v) is not int or not 0<=v<=15 for v in masks.values())
+            or type(target) is not int or target!=sum(bool(v) for v in masks.values())
+            or not isinstance(random_ids,list) or len(random_ids)!=target
+            or len(random_ids)!=len(set(random_ids))
+            or not set(random_ids)<=population):
+            raise ValueError("malformed training-only reference update schedule")
     return receipt
 
 
