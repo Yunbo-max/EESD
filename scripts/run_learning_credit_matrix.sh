@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Seven-arm, five-update RunBugRun protocol. No model/evaluation fake data.
 set -euo pipefail
-if [[ $# -ne 3 ]]; then
- echo "Usage: bash scripts/run_learning_credit_matrix.sh DATA_DIR OUTPUT_ROOT pilot|full" >&2; exit 2
+if [[ $# -lt 3 || $# -gt 4 ]]; then
+ echo "Usage: bash scripts/run_learning_credit_matrix.sh DATA_DIR OUTPUT_ROOT pilot|full [TRAIN_SEED]" >&2; exit 2
 fi
 DATA="$1"; OUT="$2"; SCALE="$3"
 case "$SCALE" in
@@ -16,6 +16,7 @@ fi
 export PYTHONPATH="$PWD/src"
 mkdir -p "$OUT"
 SEED=1701
+if [[ $# -eq 4 ]]; then SEED="$4"; fi
 INITIAL="$OUT/shared_initial_adapter"
 python scripts/create_learning_credit_init.py --output "$INITIAL" --seed "$SEED"
 
