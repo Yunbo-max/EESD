@@ -111,6 +111,41 @@ def summarize(root:Path,*,bootstrap:int=3000,seed:int=314159)->dict:
         'shapley_vs_matched_updates':_paired(evals['shapley'][5]['success'],
                   evals['matched_random_updates'][5]['success'],draws),
     }
+    # Round 0 has byte-identical starting weights and per-source rollout RNG.
+    # This is the only round in which direct vs Shapley selection can be
+    # compared causally on exactly the SAME candidate pool.
+    first_round={}
+    for arm in ('shapley','direct_max'):
+        path=root/arm/'round_0'/'training.jsonl'
+        if not path.is_file():raise FileNotFoundError(path)
+        items=[json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+        byid={v['source_id']:v for v in items}
+        if len(byid)!=len(items):raise ValueError('duplicate training source receipts')
+        first_round[arm]=byid
+    if set(first_round['shapley'])!=set(first_round['direct_max']):
+        raise ValueError('direct/Shapley round-0 source population differs')
+    diff_masks=0;comparable=0;direct_regret=[];identical=0
+    for src in sorted(first_round['shapley']):
+        sp=first_round['shapley'][src];dr=first_round['direct_max'][src]
+        ca=sp.get('candidate_code_sha256');cb=dr.get('candidate_code_sha256')
+        if ca is not None or cb is not None:
+            if ca!=cb:raise ValueError('round-0 code candidates not identical')
+            identical+=1
+        if sp.get('selected_mask',0)!=dr.get('selected_mask',0):
+            diff_masks+=1
+        js=sp.get('j_calibration');jd=dr.get('j_calibration')
+        if js is not None and jd is not None:
+            comparable+=1
+            if float(jd)+1e-9<float(js):
+                raise ValueError('direct J(S) cannot be lower than Shapley on matched training data')
+            direct_regret.append(float(jd)-float(js))
+    result['round0_direct_vs_shapley_selection']={
+        'sources':len(first_round['shapley']),
+        'matched_candidate_pools':identical,
+        'subset_choice_disagreement_rate':diff_masks/len(first_round['shapley']),
+        'both_nonempty_comparable':comparable,
+        'mean_direct_minus_shapley_training_J':float(np.mean(direct_regret)) if direct_regret else None,
+        'interpretation':'direct wins or ties in-sample J; Shapley must win only on heldout transfer'}
     for random_arm in ('random_subset','matched_random_updates'):
         requested=[result['arms'][random_arm][r]['training']['scheduled_optimizer_steps'] for r in range(5)]
         realized=[result['arms'][random_arm][r]['training']['optimizer_steps'] for r in range(5)]
